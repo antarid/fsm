@@ -29,7 +29,7 @@ class FSM {
             this.array.push(this.currentState);
         }
         else
-            new Error();
+            throw new Error();
            
     }
   
@@ -43,7 +43,7 @@ class FSM {
             this.array.push(this.currentState);
         }
         else{
-          new Error();
+            throw new Error();
         }
     }
   
@@ -64,15 +64,18 @@ class FSM {
     
     getStates(event) {
         
-  
         if(!event){
           var result = [];
           for(var key in this.config.states)
             result.push(key);
           return result;
         }
-        else
-            return this.array;
+        else{
+            var result = [];
+            for(var key in this.config.states[''+event].transitions)
+                result.push(key);
+            return result;
+        }
     }
   
     /**
@@ -95,7 +98,12 @@ class FSM {
      * Returns false if redo is not available.
      * @returns {Boolean}
      */ 
-    redo() {}
+    redo() {
+        if(this.currentState == this.config.initial && this.array.length == 1)
+            return false;
+        
+        return false;
+    }
   
     /**
      * Clears transition history
