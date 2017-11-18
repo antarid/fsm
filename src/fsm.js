@@ -7,8 +7,8 @@ class FSM {
         this.config = config;
         this.currentState = config.initial;
         this.states = config.states;
-        this.array = [];
-        this.array.push(this.currentState);
+        this.undoString = '';
+        this.redoString = '';
     }
   
     /**
@@ -25,8 +25,9 @@ class FSM {
      */
     changeState(state) {
         if(state in this.states){
+            this.undoString = this.currentState;
             this.currentState = state;
-            this.array.push(this.currentState);
+            this.redoString = this.currentState;
         }
         else
             throw new Error();
@@ -39,8 +40,9 @@ class FSM {
      */
     trigger(event) {
         if(event in this.config.states[this.currentState].transitions){
+            this.undoString = this.currentState;
             this.currentState = this.config.states[this.currentState].transitions[event];
-            this.array.push(this.currentState);
+            this.redoString = this.currentState;
         }
         else{
             throw new Error();
@@ -63,19 +65,19 @@ class FSM {
      */
     
     getStates(event) {
-        
-        if(!event){
-          var result = [];
-          for(var key in this.config.states)
-            result.push(key);
-          return result;
-        }
-        else{
-            var result = [];
-            for(var key in this.config.states[''+event].transitions)
+        let result = [];
+        if(typeof event === 'undefined'){
+            for(let key in this.config.states)
                 result.push(key);
             return result;
         }
+        for(let key in this.config.states){
+            if(typeof this.config.states[key].transitions[event] !== 'undefined')
+                result.push(key);
+        }
+        if(result.length == 0)
+            return [];
+        return result;
     }
   
     /**
@@ -84,10 +86,11 @@ class FSM {
      * @returns {Boolean}
      */
     undo() {
-        if(this.array.length == 0 || this.array.length == 1)
+        if(!this.undoString)
             return false;
-        if(this.array[this.array.length - 2]){
-            this.currentState = this.array[this.array.length - 2];
+        else{
+            this.currentState = this.undoString;
+            this.undoString = '';
             return true;
         }
         return false;
@@ -99,8 +102,13 @@ class FSM {
      * @returns {Boolean}
      */ 
     redo() {
-        if(this.currentState == this.config.initial && this.array.length == 1)
+        if(!this.redoString)
             return false;
+        else{
+            this.currentState = this.redoString;
+            this.redoString = '';
+            return true;
+        }
         
         return false;
     }
@@ -109,7 +117,8 @@ class FSM {
      * Clears transition history
      */
     clearHistory() {
-        this.array = [];
+        this.undoString = '';
+        this.redoString = '';
     }
   }
 
